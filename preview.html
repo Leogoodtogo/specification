@@ -1,1 +1,37 @@
-
+html
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs" type="module"></script>
+<script type="module">
+    // 等待模块加载完成后，再执行渲染逻辑
+    import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs';
+    
+    // 关键：告诉 PDF.js 它的 worker 文件在哪里（同样用 CDN）
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs';
+    
+    // 下面是你的渲染代码（保留原来的逻辑）
+    const urlParams = new URLSearchParams(window.location.search);
+    const pdfFileName = urlParams.get('file');
+    
+    if (!pdfFileName) {
+        document.getElementById('canvas-container').innerHTML = '<p style="color:white;">错误：未指定 PDF 文件名。</p>';
+    } else {
+        pdfjsLib.getDocument(pdfFileName).promise.then(function(pdf) {
+            const container = document.getElementById('canvas-container');
+            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                pdf.getPage(pageNum).then(function(page) {
+                    const viewport = page.getViewport({ scale: 1.5 });
+                    const canvas = document.createElement('canvas');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    container.appendChild(canvas);
+                    const renderContext = {
+                        canvasContext: canvas.getContext('2d'),
+                        viewport: viewport
+                    };
+                    page.render(renderContext);
+                });
+            }
+        }).catch(function(error) {
+            document.getElementById('canvas-container').innerHTML = '<p style="color:white;">加载 PDF 失败：' + error.message + '</p>';
+        });
+    }
+</script>
