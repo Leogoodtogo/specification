@@ -1,6 +1,5 @@
-jsonc
 {
-  "name": "KC-2220.PDF",
+  "name": "my-pdf",
   "assets": {
     "directory": "./"
   },
@@ -10,6 +9,12 @@ jsonc
       "headers": [
         { "key": "Content-Type", "value": "application/pdf" },
         { "key": "Content-Disposition", "value": "inline" }
+      ]
+    },
+    {
+      "source": "/pdfjs/*.mjs",
+      "headers": [
+        { "key": "Content-Type", "value": "application/javascript" }
       ]
     }
   ]
