@@ -1,18 +1,14 @@
-html
 <script type="module">
-    // 引入本地 pdf.mjs
-    import * as pdfjsLib from './pdfjs/pdf.mjs';
-
-    // 设置 worker 文件路径（指向本地的 pdf.worker.mjs）
-    pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs/pdf.worker.mjs';
+    // 关键修正：路径以 / 开头，从网站根目录查找
+    import * as pdfjsLib from '/pdfjs/pdf.mjs';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.mjs';
 
     const urlParams = new URLSearchParams(window.location.search);
     let pdfFileName = urlParams.get('file');
 
     if (!pdfFileName) {
-        document.getElementById('canvas-container').innerHTML = '<p style="color:white;">错误：未指定 PDF 文件名。</p>';
+        document.getElementById('canvas-container').innerHTML = '<p style="color:white;">错误：未指定 PDF 文件名。</p >';
     } else {
-        // 只取文件名，防止环路问题
         pdfFileName = pdfFileName.split('/').pop();
         const pdfUrl = window.location.origin + '/' + encodeURIComponent(pdfFileName);
 
@@ -33,7 +29,7 @@ html
                 });
             }
         }).catch(function(error) {
-            document.getElementById('canvas-container').innerHTML = '<p style="color:white;">加载 PDF 失败：' + error.message + '</p>';
+            document.getElementById('canvas-container').innerHTML = '<p style="color:white;">加载 PDF 失败：' + error.message + '</p >';
         });
     }
 </script>
