@@ -1,7 +1,10 @@
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs" type="module"></script>
+html
 <script type="module">
-    import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs';
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs';
+    // 引入本地 pdf.mjs
+    import * as pdfjsLib from './pdfjs/pdf.mjs';
+
+    // 设置 worker 文件路径（指向本地的 pdf.worker.mjs）
+    pdfjsLib.GlobalWorkerOptions.workerSrc = './pdfjs/pdf.worker.mjs';
 
     const urlParams = new URLSearchParams(window.location.search);
     let pdfFileName = urlParams.get('file');
@@ -9,10 +12,8 @@
     if (!pdfFileName) {
         document.getElementById('canvas-container').innerHTML = '<p style="color:white;">错误：未指定 PDF 文件名。</p>';
     } else {
-        // 关键修正：只取文件名，去掉任何路径或域名前缀
+        // 只取文件名，防止环路问题
         pdfFileName = pdfFileName.split('/').pop();
-
-        // 拼接为当前域名下的绝对路径，避免相对路径解析歧义
         const pdfUrl = window.location.origin + '/' + encodeURIComponent(pdfFileName);
 
         pdfjsLib.getDocument(pdfUrl).promise.then(function(pdf) {
