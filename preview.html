@@ -1,20 +1,21 @@
-html
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs" type="module"></script>
 <script type="module">
-    // 等待模块加载完成后，再执行渲染逻辑
     import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs';
-    
-    // 关键：告诉 PDF.js 它的 worker 文件在哪里（同样用 CDN）
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs';
-    
-    // 下面是你的渲染代码（保留原来的逻辑）
+
     const urlParams = new URLSearchParams(window.location.search);
-    const pdfFileName = urlParams.get('file');
-    
+    let pdfFileName = urlParams.get('file');
+
     if (!pdfFileName) {
         document.getElementById('canvas-container').innerHTML = '<p style="color:white;">错误：未指定 PDF 文件名。</p>';
     } else {
-        pdfjsLib.getDocument(pdfFileName).promise.then(function(pdf) {
+        // 关键修正：只取文件名，去掉任何路径或域名前缀
+        pdfFileName = pdfFileName.split('/').pop();
+
+        // 拼接为当前域名下的绝对路径，避免相对路径解析歧义
+        const pdfUrl = window.location.origin + '/' + encodeURIComponent(pdfFileName);
+
+        pdfjsLib.getDocument(pdfUrl).promise.then(function(pdf) {
             const container = document.getElementById('canvas-container');
             for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                 pdf.getPage(pageNum).then(function(page) {
