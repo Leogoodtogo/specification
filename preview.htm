@@ -28,6 +28,7 @@
             function loadPage(n) {
                 if (n > maxPages) return;
                 const img = new Image();
+                // 与 Actions 生成的命名完全一致：page-1.jpg, page-2.jpg ...
                 img.src = '/images/' + baseName + '/page-' + n + '.jpg';
                 img.onload = function() {
                     container.appendChild(img);
