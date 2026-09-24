@@ -1,4 +1,3 @@
-html
 <!DOCTYPE html>
 <html>
 <head>
@@ -20,31 +19,43 @@ html
         const urlParams = new URLSearchParams(window.location.search);
         let pdfFileName = urlParams.get('file');
 
+        // 如果没读到 file 参数，显示当前完整 URL，方便排查
         if (!pdfFileName) {
-            document.getElementById('canvas-container').innerHTML = '<p style="color:white;">错误：未指定 PDF 文件名。</p>';
+            document.getElementById('canvas-container').innerHTML =
+                '<p style="color:white;">错误：未指定 PDF 文件名。<br>当前 URL：' + window.location.href + '</p>';
         } else {
             pdfFileName = pdfFileName.split('/').pop();
             const pdfUrl = window.location.origin + '/' + encodeURIComponent(pdfFileName);
 
-            pdfjsLib.getDocument(pdfUrl).promise.then(function(pdf) {
-                const container = document.getElementById('canvas-container');
-                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                    pdf.getPage(pageNum).then(function(page) {
-                        const viewport = page.getViewport({ scale: 1.5 });
-                        const canvas = document.createElement('canvas');
-                        canvas.width = viewport.width;
-                        canvas.height = viewport.height;
-                        container.appendChild(canvas);
-                        const renderContext = {
-                            canvasContext: canvas.getContext('2d'),
-                            viewport: viewport
-                        };
-                        page.render(renderContext);
-                    });
-                }
-            }).catch(function(error) {
-                document.getElementById('canvas-container').innerHTML = '<p style="color:white;">加载 PDF 失败：' + error.message + '</p>';
-            });
+            // 先测试 PDF 文件是否可访问
+            fetch(pdfUrl, { method: 'HEAD' })
+                .then(function(res) {
+                    if (!res.ok) {
+                        throw new Error('PDF 文件无法访问，状态码：' + res.status);
+                    }
+                    return pdfjsLib.getDocument(pdfUrl).promise;
+                })
+                .then(function(pdf) {
+                    const container = document.getElementById('canvas-container');
+                    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                        pdf.getPage(pageNum).then(function(page) {
+                            const viewport = page.getViewport({ scale: 1.5 });
+                            const canvas = document.createElement('canvas');
+                            canvas.width = viewport.width;
+                            canvas.height = viewport.height;
+                            container.appendChild(canvas);
+                            const renderContext = {
+                                canvasContext: canvas.getContext('2d'),
+                                viewport: viewport
+                            };
+                            page.render(renderContext);
+                        });
+                    }
+                })
+                .catch(function(error) {
+                    document.getElementById('canvas-container').innerHTML =
+                        '<p style="color:white;">加载 PDF 失败：' + error.message + '</p>';
+                });
         }
     </script>
 </body>
