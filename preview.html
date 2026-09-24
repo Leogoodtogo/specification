@@ -1,35 +1,51 @@
-<script type="module">
-    // 关键修正：路径以 / 开头，从网站根目录查找
-    import * as pdfjsLib from '/pdfjs/pdf.mjs';
-    pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.mjs';
+html
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF 在线预览</title>
+    <style>
+        body { margin: 0; padding: 0; background-color: #333; }
+        #canvas-container { text-align: center; padding: 10px; }
+        canvas { max-width: 100%; height: auto; box-shadow: 0 0 10px rgba(0,0,0,0.5); margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <script type="module">
+        import * as pdfjsLib from '/pdfjs/pdf.mjs';
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.mjs';
 
-    const urlParams = new URLSearchParams(window.location.search);
-    let pdfFileName = urlParams.get('file');
+        const urlParams = new URLSearchParams(window.location.search);
+        let pdfFileName = urlParams.get('file');
 
-    if (!pdfFileName) {
-        document.getElementById('canvas-container').innerHTML = '<p style="color:white;">错误：未指定 PDF 文件名。</p >';
-    } else {
-        pdfFileName = pdfFileName.split('/').pop();
-        const pdfUrl = window.location.origin + '/' + encodeURIComponent(pdfFileName);
+        if (!pdfFileName) {
+            document.getElementById('canvas-container').innerHTML = '<p style="color:white;">错误：未指定 PDF 文件名。</p>';
+        } else {
+            pdfFileName = pdfFileName.split('/').pop();
+            const pdfUrl = window.location.origin + '/' + encodeURIComponent(pdfFileName);
 
-        pdfjsLib.getDocument(pdfUrl).promise.then(function(pdf) {
-            const container = document.getElementById('canvas-container');
-            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                pdf.getPage(pageNum).then(function(page) {
-                    const viewport = page.getViewport({ scale: 1.5 });
-                    const canvas = document.createElement('canvas');
-                    canvas.width = viewport.width;
-                    canvas.height = viewport.height;
-                    container.appendChild(canvas);
-                    const renderContext = {
-                        canvasContext: canvas.getContext('2d'),
-                        viewport: viewport
-                    };
-                    page.render(renderContext);
-                });
-            }
-        }).catch(function(error) {
-            document.getElementById('canvas-container').innerHTML = '<p style="color:white;">加载 PDF 失败：' + error.message + '</p >';
-        });
-    }
-</script>
+            pdfjsLib.getDocument(pdfUrl).promise.then(function(pdf) {
+                const container = document.getElementById('canvas-container');
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    pdf.getPage(pageNum).then(function(page) {
+                        const viewport = page.getViewport({ scale: 1.5 });
+                        const canvas = document.createElement('canvas');
+                        canvas.width = viewport.width;
+                        canvas.height = viewport.height;
+                        container.appendChild(canvas);
+                        const renderContext = {
+                            canvasContext: canvas.getContext('2d'),
+                            viewport: viewport
+                        };
+                        page.render(renderContext);
+                    });
+                }
+            }).catch(function(error) {
+                document.getElementById('canvas-container').innerHTML = '<p style="color:white;">加载 PDF 失败：' + error.message + '</p>';
+            });
+        }
+    </script>
+</body>
+</html>
