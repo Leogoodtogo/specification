@@ -44,7 +44,8 @@
                     if (!res.ok) {
                         throw new Error('PDF 文件无法访问，状态码：' + res.status);
                     }
-                    return pdfjsLib.getDocument(pdfUrl).promise;
+                    // 关键修正：用对象形式传入 url
+                    return pdfjsLib.getDocument({ url: pdfUrl }).promise;
                 })
                 .then(function(pdf) {
                     const container = document.getElementById('canvas-container');
