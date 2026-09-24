@@ -56,7 +56,9 @@
                 }
                 return pdfjsLib.getDocument({
                     url: pdfUrl,
-                    wasmUrl: '/wasm/'
+    wasmUrl: '/wasm/',
+    rangeChunkSize: 65536,   // 每次只请求 64KB 的数据块
+    disableAutoFetch: true    // 禁用自动加载全部页面，只按需加载
                 }).promise;
             })
             .then(function(pdf) {
