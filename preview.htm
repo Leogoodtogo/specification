@@ -5,31 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDF 在线预览</title>
     <style>
-        body { margin: 0; padding: 0; background-color: #333; }
+        body { margin: 0; padding: 0; background-color: #333; color: white; font-family: monospace; }
+        #debug { padding: 20px; background: #222; }
         #canvas-container { text-align: center; padding: 10px; }
         canvas { max-width: 100%; height: auto; box-shadow: 0 0 10px rgba(0,0,0,0.5); margin-bottom: 10px; }
     </style>
 </head>
 <body>
+    <div id="debug">
+        当前完整 URL：<span id="full-url"></span><br>
+        file 参数值：<span id="file-param"></span><br>
+        拼接后的 PDF 地址：<span id="pdf-url"></span><br>
+        文件可访问性：<span id="fetch-result">检测中...</span>
+    </div>
     <div id="canvas-container"></div>
     <script type="module">
         import * as pdfjsLib from '/pdfjs/pdf.mjs';
         pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.mjs';
 
+        document.getElementById('full-url').textContent = window.location.href;
+
         const urlParams = new URLSearchParams(window.location.search);
         let pdfFileName = urlParams.get('file');
+        document.getElementById('file-param').textContent = pdfFileName || '（空）';
 
-        // 如果没读到 file 参数，显示当前完整 URL，方便排查
         if (!pdfFileName) {
             document.getElementById('canvas-container').innerHTML =
-                '<p style="color:white;">错误：未指定 PDF 文件名。<br>当前 URL：' + window.location.href + '</p>';
+                '<p style="color:red;">错误：file 参数为空，请检查 URL 是否正确。</p>';
         } else {
             pdfFileName = pdfFileName.split('/').pop();
             const pdfUrl = window.location.origin + '/' + encodeURIComponent(pdfFileName);
+            document.getElementById('pdf-url').textContent = pdfUrl;
 
-            // 先测试 PDF 文件是否可访问
             fetch(pdfUrl, { method: 'HEAD' })
                 .then(function(res) {
+                    document.getElementById('fetch-result').textContent =
+                        '状态码 ' + res.status + '，' + (res.ok ? '可访问' : '不可访问');
                     if (!res.ok) {
                         throw new Error('PDF 文件无法访问，状态码：' + res.status);
                     }
@@ -54,7 +65,7 @@
                 })
                 .catch(function(error) {
                     document.getElementById('canvas-container').innerHTML =
-                        '<p style="color:white;">加载 PDF 失败：' + error.message + '</p>';
+                        '<p style="color:red;">加载 PDF 失败：' + error.message + '</p>';
                 });
         }
     </script>
