@@ -20,7 +20,7 @@
         文件可访问性：<span id="fetch-result">检测中...</span>
     </div>
     <div id="canvas-container"></div>
-   <script type="module">
+  <script type="module">
     import * as pdfjsLib from '/pdfjs/pdf.mjs';
     pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.mjs';
 
@@ -56,20 +56,38 @@
                 }
                 return pdfjsLib.getDocument({
                     url: pdfUrl,
-    wasmUrl: '/wasm/',
-    rangeChunkSize: 65536,   // 每次只请求 64KB 的数据块
-    disableAutoFetch: true    // 禁用自动加载全部页面，只按需加载
+                    wasmUrl: '/wasm/',
+                    rangeChunkSize: 65536,
+                    disableAutoFetch: true
                 }).promise;
             })
             .then(function(pdf) {
                 const container = document.getElementById('canvas-container');
                 for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                     pdf.getPage(pageNum).then(function(page) {
-                        const viewport = page.getViewport({ scale: 1.5 });
+                        const baseViewport = page.getViewport({ scale: 1.5 });
+
+                        const MAX_PHYSICAL_PX = 4096;
+                        const dpr = window.devicePixelRatio || 1;
+
+                        let physicalWidth = baseViewport.width * dpr;
+                        let physicalHeight = baseViewport.height * dpr;
+
+                        let scale = 1.5;
+                        if (physicalWidth > MAX_PHYSICAL_PX || physicalHeight > MAX_PHYSICAL_PX) {
+                            const scaleFactor = Math.min(
+                                MAX_PHYSICAL_PX / physicalWidth,
+                                MAX_PHYSICAL_PX / physicalHeight
+                            );
+                            scale = 1.5 * scaleFactor;
+                        }
+
+                        const viewport = page.getViewport({ scale: scale });
                         const canvas = document.createElement('canvas');
                         canvas.width = viewport.width;
                         canvas.height = viewport.height;
                         container.appendChild(canvas);
+
                         const renderContext = {
                             canvasContext: canvas.getContext('2d'),
                             viewport: viewport
