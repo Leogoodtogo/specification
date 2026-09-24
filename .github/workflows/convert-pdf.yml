@@ -23,7 +23,10 @@ jobs:
           for pdf in pdfs/*.pdf; do
             if [ -f "$pdf" ]; then
               basename=$(basename "$pdf" .pdf)
+              # 删除旧图片，避免新旧文件名混在一起
+              rm -rf "images/$basename"
               mkdir -p "images/$basename"
+              # 输出：page-1.jpg, page-2.jpg, ...（不补零）
               pdftoppm -jpeg -r 150 "$pdf" "images/$basename/page"
               echo "Converted: $pdf"
             fi
