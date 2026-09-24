@@ -12,35 +12,48 @@
 </head>
 <body>
     <div id="canvas-container"></div>
-    <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const pdfName = urlParams.get('file');
+   <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const pdfName = urlParams.get('file');
 
-        if (!pdfName) {
-            document.getElementById('canvas-container').innerHTML =
-                '<p style="color:red;">Error: file parameter is empty.</p>';
-        } else {
-            const baseName = pdfName.replace(/\.pdf$/i, '');
-            const container = document.getElementById('canvas-container');
-            let pageNum = 1;
-            const maxPages = 200;
+    if (!pdfName) {
+        document.getElementById('canvas-container').innerHTML =
+            '<p style="color:red;">Error: file parameter is empty.</p>';
+    } else {
+        const baseName = pdfName.replace(/\.pdf$/i, '');
+        const container = document.getElementById('canvas-container');
+        const maxPages = 200;
 
-            function loadPage(n) {
-                if (n > maxPages) return;
-                const img = new Image();
-                // 与 Actions 生成的命名完全一致：page-1.jpg, page-2.jpg ...
-                img.src = '/images/' + baseName + '/page-' + n + '.jpg';
-                img.onload = function() {
-                    container.appendChild(img);
-                    loadPage(n + 1);
-                };
-                img.onerror = function() {
-                    console.log('No more pages, stopped at ' + n);
-                };
-            }
+        // 占位符：先给每页一个灰色方块，滚到附近再加载真实图片
+        const observers = [];
+        for (let n = 1; n <= maxPages; n++) {
+            const wrapper = document.createElement('div');
+            wrapper.style.minHeight = '800px'; // 占位高度，避免滚动跳变
+            wrapper.style.marginBottom = '10px';
+            wrapper.style.background = '#222';
+            container.appendChild(wrapper);
 
-            loadPage(1);
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        const img = new Image();
+                        img.src = '/images/' + baseName + '/page-' + n + '.jpg';
+                        img.style.maxWidth = '100%';
+                        img.style.height = 'auto';
+                        img.style.display = 'block';
+                        img.style.margin = '0 auto';
+                        wrapper.style.minHeight = ''; // 图片加载后取消占位高度
+                        img.onload = function() {
+                            wrapper.appendChild(img);
+                        };
+                        observer.disconnect();
+                    }
+                });
+            }, { rootMargin: '200px' }); // 提前 200px 开始加载
+            observer.observe(wrapper);
+            observers.push(observer);
         }
-    </script>
+    }
+</script>
 </body>
 </html>
