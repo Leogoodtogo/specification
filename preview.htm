@@ -47,13 +47,7 @@
                     }
                     return pdfjsLib.getDocument({
     url: pdfUrl,
-    // 放宽单张图片的尺寸限制（单位：像素的平方，即面积）
-    // 默认值约为 16,777,216（约 4096x4096）
-    // 调大后允许渲染更大的图片，代价是消耗更多内存
-    maxImageSize: 67108864, // 64M，可根据情况调整
-    // 启用 canvas 分块渲染，将大图分割到多个小 canvas 上绘制
-    // 这是解决超大图片显示问题的关键
-    enableCanvasSplit: true
+    wasmUrl: '/wasm/'
 }).promise;
                 })
                 .then(function(pdf) {
