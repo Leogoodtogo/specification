@@ -25,7 +25,23 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.mjs';
 
         document.getElementById('full-url').textContent = window.location.href;
+/ ✅ 把补丁代码粘贴在这里（紧跟在设置 workerSrc 之后）
+    if (typeof Map.prototype.getOrInsertComputed === 'undefined') {
+      Object.defineProperty(Map.prototype, 'getOrInsertComputed', {
+        value: function (key, callbackFn) {
+          if (this.has(key)) {
+            return this.get(key);
+          }
+          const value = callbackFn(key);
+          this.set(key, value);
+          return value;
+        },
+        writable: true,
+        configurable: true
+      });
+    }
 
+    // 下面是你原有的逻辑（URL 参数解析、fetch 检测、getDocument 等）
         const urlParams = new URLSearchParams(window.location.search);
         let pdfFileName = urlParams.get('file');
         document.getElementById('file-param').textContent = pdfFileName || '（空）';
