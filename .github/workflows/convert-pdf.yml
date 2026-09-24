@@ -1,0 +1,38 @@
+name: Convert PDF to Images
+
+on:
+  push:
+    paths:
+      - 'pdfs/**.pdf'
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install poppler-utils
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+
+      - name: Convert PDFs to images
+        run: |
+          mkdir -p images
+          for pdf in pdfs/*.pdf; do
+            if [ -f "$pdf" ]; then
+              basename=$(basename "$pdf" .pdf)
+              mkdir -p "images/$basename"
+              pdftoppm -jpeg -r 150 "$pdf" "images/$basename/page"
+              echo "Converted: $pdf"
+            fi
+          done
+
+      - name: Commit and push images
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add images/
+          git commit -m "Convert PDFs to images" || echo "No changes to commit"
+          git push
