@@ -23,12 +23,19 @@ jobs:
           for pdf in pdfs/*.pdf; do
             if [ -f "$pdf" ]; then
               basename=$(basename "$pdf" .pdf)
-              # 删除旧图片，避免新旧文件名混在一起
               rm -rf "images/$basename"
               mkdir -p "images/$basename"
-              # 输出：page-1.jpg, page-2.jpg, ...（不补零）
-              pdftoppm -jpeg -r 150 "$pdf" "images/$basename/page"
-              echo "Converted: $pdf"
+              # 先转到临时目录（文件名由 pdftoppm 默认生成，可能带前导零）
+              tmpdir=$(mktemp -d)
+              pdftoppm -jpeg -r 150 "$pdf" "$tmpdir/page"
+              # 重命名为不带前导零：page-1.jpg, page-2.jpg ...
+              i=1
+              for f in $(ls "$tmpdir"/page-*.jpg | sort -V); do
+                mv "$f" "images/$basename/page-$i.jpg"
+                i=$((i + 1))
+              done
+              rm -rf "$tmpdir"
+              echo "Converted: $pdf ($((i - 1)) pages)"
             fi
           done
 
