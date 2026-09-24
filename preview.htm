@@ -20,74 +20,67 @@
         文件可访问性：<span id="fetch-result">检测中...</span>
     </div>
     <div id="canvas-container"></div>
-    <script type="module">
-        import * as pdfjsLib from '/pdfjs/pdf.mjs';
-        pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.mjs';
+   <script type="module">
+    import * as pdfjsLib from '/pdfjs/pdf.mjs';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.mjs';
 
-        document.getElementById('full-url').textContent = window.location.href;
-/ ✅ 把补丁代码粘贴在这里（紧跟在设置 workerSrc 之后）
     if (typeof Map.prototype.getOrInsertComputed === 'undefined') {
-      Object.defineProperty(Map.prototype, 'getOrInsertComputed', {
-        value: function (key, callbackFn) {
-          if (this.has(key)) {
-            return this.get(key);
-          }
-          const value = callbackFn(key);
-          this.set(key, value);
-          return value;
-        },
-        writable: true,
-        configurable: true
-      });
+        Object.defineProperty(Map.prototype, 'getOrInsertComputed', {
+            value: function (key, callbackFn) {
+                if (this.has(key)) {
+                    return this.get(key);
+                }
+                const value = callbackFn(key);
+                this.set(key, value);
+                return value;
+            },
+            writable: true,
+            configurable: true
+        });
     }
 
-    // 下面是你原有的逻辑（URL 参数解析、fetch 检测、getDocument 等）
-        const urlParams = new URLSearchParams(window.location.search);
-        let pdfFileName = urlParams.get('file');
-        document.getElementById('file-param').textContent = pdfFileName || '（空）';
+    const urlParams = new URLSearchParams(window.location.search);
+    let pdfFileName = urlParams.get('file');
 
-        if (!pdfFileName) {
-            document.getElementById('canvas-container').innerHTML =
-                '<p style="color:red;">Error: file parameter is empty.</p>';
-        } else {
-            pdfFileName = pdfFileName.split('/').pop();
-            const pdfUrl = window.location.origin + '/' + encodeURIComponent(pdfFileName);
-            document.getElementById('pdf-url').textContent = pdfUrl;
+    if (!pdfFileName) {
+        document.getElementById('canvas-container').innerHTML =
+            '<p style="color:red;">Error: file parameter is empty.</p>';
+    } else {
+        pdfFileName = pdfFileName.split('/').pop();
+        const pdfUrl = window.location.origin + '/' + encodeURIComponent(pdfFileName);
 
-            fetch(pdfUrl, { method: 'HEAD' })
-                .then(function(res) {
-                    document.getElementById('fetch-result').textContent =
-                        'Status ' + res.status + ', ' + (res.ok ? 'accessible' : 'inaccessible');
-                    if (!res.ok) {
-                        throw new Error('PDF file inaccessible, status: ' + res.status);
-                    }
-                    return pdfjsLib.getDocument({
-    url: pdfUrl,
-    wasmUrl: '/wasm/'
-}).promise;
-                })
-                .then(function(pdf) {
-                    const container = document.getElementById('canvas-container');
-                    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                        pdf.getPage(pageNum).then(function(page) {
-                            const viewport = page.getViewport({ scale: 1.5 });
-                            const canvas = document.createElement('canvas');
-                            canvas.width = viewport.width;
-                            canvas.height = viewport.height;
-                            container.appendChild(canvas);
-                            const renderContext = {
-                                canvasContext: canvas.getContext('2d'),
-                                viewport: viewport
-                            };
-                            page.render(renderContext);
-                        });
-                    }
-                })
-                .catch(function(error) {
-                    document.getElementById('canvas-container').innerHTML =
-                        '<p style="color:red;">Failed to load PDF: ' + error.message + '</p>';
-                });
-        }
-    </script>
+        fetch(pdfUrl, { method: 'HEAD' })
+            .then(function(res) {
+                if (!res.ok) {
+                    throw new Error('PDF file inaccessible, status: ' + res.status);
+                }
+                return pdfjsLib.getDocument({
+                    url: pdfUrl,
+                    wasmUrl: '/wasm/'
+                }).promise;
+            })
+            .then(function(pdf) {
+                const container = document.getElementById('canvas-container');
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    pdf.getPage(pageNum).then(function(page) {
+                        const viewport = page.getViewport({ scale: 1.5 });
+                        const canvas = document.createElement('canvas');
+                        canvas.width = viewport.width;
+                        canvas.height = viewport.height;
+                        container.appendChild(canvas);
+                        const renderContext = {
+                            canvasContext: canvas.getContext('2d'),
+                            viewport: viewport
+                        };
+                        page.render(renderContext);
+                    });
+                }
+            })
+            .catch(function(error) {
+                document.getElementById('canvas-container').innerHTML =
+                    '<p style="color:red;">Failed to load PDF: ' + error.message + '</p>';
+            });
+    }
+</script>
 </body>
 </html>
