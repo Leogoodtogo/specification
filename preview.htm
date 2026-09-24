@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Viewer</title>
+    <style>
+        body { margin: 0; padding: 0; background-color: #333; }
+        #canvas-container { text-align: center; padding: 10px; }
+        img { max-width: 100%; height: auto; box-shadow: 0 0 10px rgba(0,0,0,0.5); margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto; }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const pdfName = urlParams.get('file');
+
+        if (!pdfName) {
+            document.getElementById('canvas-container').innerHTML =
+                '<p style="color:red;">Error: file parameter is empty.</p>';
+        } else {
+            const baseName = pdfName.replace(/\.pdf$/i, '');
+            const container = document.getElementById('canvas-container');
+            let pageNum = 1;
+            const maxPages = 200;
+
+            function loadPage(n) {
+                if (n > maxPages) return;
+                const img = new Image();
+                img.src = '/images/' + baseName + '/page-' + n + '.jpg';
+                img.onload = function() {
+                    container.appendChild(img);
+                    loadPage(n + 1);
+                };
+                img.onerror = function() {
+                    console.log('No more pages, stopped at ' + n);
+                };
+            }
+
+            loadPage(1);
+        }
+    </script>
+</body>
+</html>
